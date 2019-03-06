@@ -1,0 +1,15 @@
+.DS_Store
+.dart_tool/
+
+.packages
+.pub/
+
+.idea/
+.vscode/
+
+key.jks
+google-services.json
+
+build/
+
+.flutter-plugins
