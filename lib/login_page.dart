@@ -166,8 +166,10 @@ class _LoginPageState extends State<LoginPage> {
 
     if(form.validate()){
       form.save();
-      user = await _auth.signInWithEmailAndPassword(email: _email.trim(), password: _password).catchError((error) {
+      await _auth.signInWithEmailAndPassword(email: _email.trim(), password: _password).catchError((error) {
         setState(() { _error = "Email ou mot de passe invalide"; });
+      }).then((authResult) {
+        user = authResult.user;
       });
     }
     return user;
