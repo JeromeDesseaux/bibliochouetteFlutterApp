@@ -13,3 +13,5 @@ google-services.json
 build/
 
 .flutter-plugins
+*.pem
+*.jks
