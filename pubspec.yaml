@@ -55,6 +55,7 @@ flutter:
     assets:
         - assets/images/logo.png
         - assets/images/drawer.jpeg
+        - assets/secrets.json
 
     fonts:
         - family: Dekko

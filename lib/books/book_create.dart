@@ -6,6 +6,9 @@ import 'package:firebase_database/firebase_database.dart';
 import 'dart:async';
 import 'package:barcode_scan/barcode_scan.dart';
 import "package:flutter/services.dart";
+import 'package:gestion_bibliotheque/security/secret_loader.dart';
+import 'package:gestion_bibliotheque/security/secret.dart';
+import 'package:gestion_bibliotheque/amazon_api.dart';
 //import 'package:xml/xml.dart' as xml;
 
 class BookCreatePage extends StatefulWidget {
@@ -18,8 +21,7 @@ class BookCreatePage extends StatefulWidget {
     return new _BookCreatePageState(this.uid);
   }
 }
-  
-  
+
 class _BookCreatePageState extends State<BookCreatePage> {
   var book;
 
@@ -39,12 +41,17 @@ class _BookCreatePageState extends State<BookCreatePage> {
   String uid;
   String barcode = "";
   bool _loading = false;
+  Secret secrets;
 
   _BookCreatePageState(String uid) {
     this.uid = uid;
-    this._defaultCover = "https://d4804za1f1gw.cloudfront.net/wp-content/uploads/sites/30/2018/03/30075855/Rare-Books-Thumbnail-248x300.jpg";
+    this._defaultCover =
+        "https://d4804za1f1gw.cloudfront.net/wp-content/uploads/sites/30/2018/03/30075855/Rare-Books-Thumbnail-248x300.jpg";
     this._pageCountController.text = "0";
     this._publicationYearController.text = new DateTime.now().year.toString();
+    SecretLoader(secretPath: "assets/secrets.json").load().then((secret) {
+      this.secrets = secret;
+    });
     //this._searchBookByISBN("9782747045223");
   }
 
@@ -64,101 +71,103 @@ class _BookCreatePageState extends State<BookCreatePage> {
 
   Widget get _homeView {
     return new ListView(
-        children: <Widget>[
-          Padding(
-            padding: EdgeInsets.all(16.0),
-            child: new Form(
-                  key: _createFormKey,
-                  child: new Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: <Widget>[
-                      //new Text(barcode),
-                      new Image.network(
-                        _book==null?_defaultCover:_book.cover,
-                        fit: BoxFit.contain,
-                        height: 142.0,
-                        width: 142.0,
-                      ),
-                      new TextFormField(
-                        controller: _titleController,
-                        onSaved: (value) => this.setState(() {this._book.title=value;}),
-                        // initialValue: _book.title,
-                        decoration: new InputDecoration(
-                          labelText: "Titre"
-                        ),
-                        validator: (value) {
-                          if(value.isEmpty)
-                            return "Merci d'indiquer le titre du livre";
-                        },
-                      ),
-                      new TextFormField(
-                        controller: _authorController,
-                        onSaved: (value) => this.setState(() {this._book.authors=value;}),
-                        decoration: new InputDecoration(
-                          labelText: "Auteur"
-                        ),
-                        validator: (value) {
-                          if(value.isEmpty)
-                            return "Merci d'indiquer le l'auteur du livre";
-                        },
-                      ),
-                      new TextFormField(
-                        controller: _pageCountController,
-                        onSaved: (value) => this.setState(() {this._book.pageCount=value;}),
-                        keyboardType: TextInputType.number,
-                        // initialValue: "0",
-                        decoration: new InputDecoration(
-                          labelText: "Nombre de pages"
-                        ),
-                      ),
-                      new TextFormField(
-                        controller: _publicationYearController,
-                        onSaved: (value) => this.setState(() {this._book.publicationYear=value;}),
-                        keyboardType: TextInputType.number,
-                        // initialValue: new DateTime.now().year.toString(),
-                        decoration: new InputDecoration(
-                          labelText: "Année de publication"
-                        ),
-                      ),
-                      new TextFormField(
-                        controller: _descriptionController,
-                        onSaved: (value) => this.setState(() {this._book.description=value;}),
-                        maxLines: 5,
-                        decoration: new InputDecoration(
-                          labelText: "Présentation"
-                        ),
-                      ),
-                      SizedBox(height: 24.0),
-                        Material(
-                          borderRadius: BorderRadius.circular(0.0),
-                          shadowColor: Colors.lightBlueAccent.shade100,
-                          elevation: 0.0,
-                          child: MaterialButton(
-                            minWidth: 200.0,
-                            height: 42.0,
-                            onPressed: () {
-                              this._save();
-                              // handleSignInEmail();
-                            },
-                            color: Colors.lightBlueAccent,
-                            child: Text('Enregistrer', style: TextStyle(color: Colors.white, fontSize: 18.0)),
-                          ),
-                        ),
-                      // new RaisedButton(
-                      //   child: new Text("Enregister"),
-                      //   onPressed: () {
-                      //     if(_createFormKey.currentState.validate()){
-                      //       _createFormKey.currentState.save();
-                      //       this._save();r
-                      //     }
-                      //   },
-                      // )
-                    ],
+      children: <Widget>[
+        Padding(
+          padding: EdgeInsets.all(16.0),
+          child: new Form(
+            key: _createFormKey,
+            child: new Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: <Widget>[
+                //new Text(barcode),
+                new Image.network(
+                  _book == null ? _defaultCover : _book.cover,
+                  fit: BoxFit.contain,
+                  height: 142.0,
+                  width: 142.0,
+                ),
+                new TextFormField(
+                  controller: _titleController,
+                  onSaved: (value) => this.setState(() {
+                    this._book.title = value;
+                  }),
+                  // initialValue: _book.title,
+                  decoration: new InputDecoration(labelText: "Titre"),
+                  validator: (value) {
+                    if (value.isEmpty)
+                      return "Merci d'indiquer le titre du livre";
+                  },
+                ),
+                new TextFormField(
+                  controller: _authorController,
+                  onSaved: (value) => this.setState(() {
+                    this._book.authors = value;
+                  }),
+                  decoration: new InputDecoration(labelText: "Auteur"),
+                  validator: (value) {
+                    if (value.isEmpty)
+                      return "Merci d'indiquer le l'auteur du livre";
+                  },
+                ),
+                new TextFormField(
+                  controller: _pageCountController,
+                  onSaved: (value) => this.setState(() {
+                    this._book.pageCount = value;
+                  }),
+                  keyboardType: TextInputType.number,
+                  // initialValue: "0",
+                  decoration: new InputDecoration(labelText: "Nombre de pages"),
+                ),
+                new TextFormField(
+                  controller: _publicationYearController,
+                  onSaved: (value) => this.setState(() {
+                    this._book.publicationYear = value;
+                  }),
+                  keyboardType: TextInputType.number,
+                  // initialValue: new DateTime.now().year.toString(),
+                  decoration:
+                      new InputDecoration(labelText: "Année de publication"),
+                ),
+                new TextFormField(
+                  controller: _descriptionController,
+                  onSaved: (value) => this.setState(() {
+                    this._book.description = value;
+                  }),
+                  maxLines: 5,
+                  decoration: new InputDecoration(labelText: "Présentation"),
+                ),
+                SizedBox(height: 24.0),
+                Material(
+                  borderRadius: BorderRadius.circular(0.0),
+                  shadowColor: Colors.lightBlueAccent.shade100,
+                  elevation: 0.0,
+                  child: MaterialButton(
+                    minWidth: 200.0,
+                    height: 42.0,
+                    onPressed: () {
+                      this._save();
+                      // handleSignInEmail();
+                    },
+                    color: Colors.lightBlueAccent,
+                    child: Text('Enregistrer',
+                        style: TextStyle(color: Colors.white, fontSize: 18.0)),
                   ),
                 ),
+                // new RaisedButton(
+                //   child: new Text("Enregister"),
+                //   onPressed: () {
+                //     if(_createFormKey.currentState.validate()){
+                //       _createFormKey.currentState.save();
+                //       this._save();r
+                //     }
+                //   },
+                // )
+              ],
+            ),
           ),
-        ],
-      );
+        ),
+      ],
+    );
   }
 
   @override
@@ -167,28 +176,36 @@ class _BookCreatePageState extends State<BookCreatePage> {
     this._book = new Book();
   }
 
-  void _searchBookByISBN(isbn) async{
+  void _searchBookByISBN(isbn) async {
     // String url = "https://www.googleapis.com/books/v1/volumes?q=isbn$isbn";
     //String url = "https://www.goodreads.com/book/isbn/$isbn?key=GS7pbjfCClZs0Ho3RNVjkg";
+    AmazonRequester awsRequester = new AmazonRequester(
+        this.secrets.awsSecret, this.secrets.awsID, this.secrets.awsPartner);
 
     setState(() {
       _loading = true;
     });
 
-    Book b = new Book();
-    await b.fromAmazonData(isbn);
+    Book b;
+
+    try {
+      b = await awsRequester.getBookFromIsbn(isbn);
+    } catch (e) {
+      b = new Book();
+      await b.fromAmazonData(isbn);
+    }
 
     // print(url);
-    //var response = await http.read(url).timeout(const Duration(seconds: 5)); 
+    //var response = await http.read(url).timeout(const Duration(seconds: 5));
     // var data = jsonDecode(response.toString());
     // print(data);
-    try{
+    try {
       //var storeDocument = xml.parse(response);
       //print(storeDocument.findAllElements('title').first.text);
       // Book b = Book.fromRequestData(storeDocument);
-      
+
       //print(b);
-      if(b != null){
+      if (b != null) {
         _titleController.text = b.title;
         _authorController.text = b.authors;
         _descriptionController.text = b.description;
@@ -198,22 +215,21 @@ class _BookCreatePageState extends State<BookCreatePage> {
           _book = b;
         });
       }
-    }catch(e){
+    } catch (e) {
       //print(e.toString());
-    }finally{
+    } finally {
       setState(() {
         _loading = false;
       });
     }
 
     // Book b = Book.fromRequestData(data);
-
   }
 
   // void _searchBook(title, author) async{
   //   String url = "https://www.googleapis.com/books/v1/volumes?q=inauthor:$author+intitle:$title";
   //   print(url);
-  //   //var response = await http.read(url).timeout(const Duration(seconds: 5)); 
+  //   //var response = await http.read(url).timeout(const Duration(seconds: 5));
   //   //var data = jsonDecode(response.toString());
   //   //Book b = Book.fromRequestData(data);
   //   Book b;
@@ -236,9 +252,14 @@ class _BookCreatePageState extends State<BookCreatePage> {
   void _save() {
     final form = _createFormKey.currentState;
 
-    if(form.validate()){
+    if (form.validate()) {
       form.save();
-      FirebaseDatabase.instance.reference().child("books").child(this.uid).push().set(this._book.toJson());
+      FirebaseDatabase.instance
+          .reference()
+          .child("books")
+          .child(this.uid)
+          .push()
+          .set(this._book.toJson());
       Navigator.pop(context);
     }
   }
@@ -256,8 +277,9 @@ class _BookCreatePageState extends State<BookCreatePage> {
       } else {
         setState(() => this.barcode = 'Unknown error: $e');
       }
-    } on FormatException{
-      setState(() => this.barcode = 'null (User returned using the "back"-button before scanning anything. Result)');
+    } on FormatException {
+      setState(() => this.barcode =
+          'null (User returned using the "back"-button before scanning anything. Result)');
     } catch (e) {
       setState(() => this.barcode = 'Unknown error: $e');
     }
@@ -315,17 +337,16 @@ class _BookCreatePageState extends State<BookCreatePage> {
   //         ],
   //       );
   //     },
-  //   );  
+  //   );
   // }
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Créer un livre"),
-        actions: <Widget>[
-          IconButton(
+        appBar: AppBar(
+          title: Text("Créer un livre"),
+          actions: <Widget>[
+            IconButton(
               icon: Icon(Icons.camera),
               onPressed: () {
                 this._scan();
@@ -342,12 +363,8 @@ class _BookCreatePageState extends State<BookCreatePage> {
             //     // print("classic search");
             //   },
             // ),
-        ],
-      ),
-      body: _pageToDisplay
-    );
+          ],
+        ),
+        body: _pageToDisplay);
   }
-
-
-  
 }
