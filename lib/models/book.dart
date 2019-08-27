@@ -3,6 +3,7 @@ import 'package:html/parser.dart';
 import 'package:http/http.dart' as http;
 import 'package:html/parser.dart' as parser;
 import 'package:html/dom.dart';
+import 'dart:io';
 // import 'dart:math';
 //import 'dart:async';
 
@@ -15,6 +16,7 @@ class Book {
   String cover = "https://d4804za1f1gw.cloudfront.net/wp-content/uploads/sites/30/2018/03/30075855/Rare-Books-Thumbnail-248x300.jpg";
   String isbn;
   String publicationYear;
+  File imageCover;
   // update/create date?
   // book type?
 
@@ -29,6 +31,16 @@ class Book {
   //   this.isbn,
   //   this.publicationYear
   // );
+
+  void setCoverFile(File cover) {
+    this.imageCover = cover;
+    this.cover = null;
+  }
+
+  void setCoverUrl(String url) {
+    this.cover = url;
+    this.imageCover = null;
+  }
 
   Book.fromJson(Map<String, dynamic> json, String _uid):
     uid=_uid,

@@ -9,6 +9,10 @@ import "package:flutter/services.dart";
 import 'package:gestion_bibliotheque/security/secret_loader.dart';
 import 'package:gestion_bibliotheque/security/secret.dart';
 import 'package:gestion_bibliotheque/amazon_api.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:uuid/uuid.dart';
 //import 'package:xml/xml.dart' as xml;
 
 class BookCreatePage extends StatefulWidget {
@@ -24,11 +28,12 @@ class BookCreatePage extends StatefulWidget {
 
 class _BookCreatePageState extends State<BookCreatePage> {
   var book;
-
+  var uuid = new Uuid();
   //final _searchFormKey = GlobalKey<FormState>();
   final _createFormKey = GlobalKey<FormState>();
 
   var _titleController = TextEditingController();
+  var _searchController = TextEditingController();
   var _authorController = TextEditingController();
   var _descriptionController = TextEditingController();
   var _pageCountController = TextEditingController();
@@ -61,15 +66,33 @@ class _BookCreatePageState extends State<BookCreatePage> {
     );
   }
 
-  Widget get _pageToDisplay {
+  Widget _pageToDisplay(BuildContext context) {
     if (this._loading) {
       return _loadingView;
     } else {
-      return _homeView;
+      return _homeView(context);
     }
   }
 
-  Widget get _homeView {
+  Future getImageFromCamera() async { // for camera
+    var image = await ImagePicker.pickImage(source: ImageSource.camera, imageQuality: 70, maxHeight: 350);
+    setState(() {
+      _book.setCoverFile(image);
+      //_book.imageCover = image;
+    });
+  }
+
+  ImageProvider getImageComponent() {
+    if(this._book.cover != null && this._book.cover != "" && this._book.cover != this._defaultCover) {
+      return new Image.network(this._book.cover).image;
+    }else if(_book.imageCover != null) {
+      return Image.file(_book.imageCover).image;
+    }
+    return new Image.network(this._defaultCover).image;
+  }
+
+
+  Widget _homeView(BuildContext context) {
     return new ListView(
       children: <Widget>[
         Padding(
@@ -79,13 +102,41 @@ class _BookCreatePageState extends State<BookCreatePage> {
             child: new Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: <Widget>[
-                //new Text(barcode),
-                new Image.network(
+                new Container(
+                  //constraints: new BoxConstraints.expand(height: 190.0, width: 130.0),
+                  constraints: new BoxConstraints.expand(height: 190.0),
+                  padding: new EdgeInsets.only(left: 16.0, bottom: 8.0, right: 16.0),
+                  alignment: Alignment.center,
+                  decoration: new BoxDecoration(
+                    image:  new DecorationImage(
+                        /*image: new Image.network(
+                          _book == null ? _defaultCover : _book.cover,
+                          fit: BoxFit.contain,
+                          height: 142.0,
+                          width: 142.0,
+                      ).image,*/
+                        image: getImageComponent(),
+                      fit: BoxFit.fitHeight
+                    )
+                  ),
+                  child: new Stack(
+                    children: <Widget>[
+                      new IconButton(icon: new Icon(Icons.add_a_photo, size: 30.0, color: Colors.white,), onPressed: this.getImageFromCamera, color: Colors.white,),
+                      /*new IconTheme(
+                        data: new IconThemeData(
+                          color: Colors.white
+                        ),
+                        child: new Icon(Icons.camera_enhance, size: 30.0),
+                      )*/
+                    ],
+                  ),
+              ),
+                /*new Image.network(
                   _book == null ? _defaultCover : _book.cover,
                   fit: BoxFit.contain,
                   height: 142.0,
                   width: 142.0,
-                ),
+                ),*/
                 new TextFormField(
                   controller: _titleController,
                   onSaved: (value) => this.setState(() {
@@ -191,8 +242,9 @@ class _BookCreatePageState extends State<BookCreatePage> {
     try {
       b = await awsRequester.getBookFromIsbn(isbn);
     } catch (e) {
-      b = new Book();
-      await b.fromAmazonData(isbn);
+      this._showAlert(context, message: e.toString());
+      //b = new Book();
+      //await b.fromAmazonData(isbn);
     }
 
     // print(url);
@@ -204,8 +256,7 @@ class _BookCreatePageState extends State<BookCreatePage> {
       //print(storeDocument.findAllElements('title').first.text);
       // Book b = Book.fromRequestData(storeDocument);
 
-      //print(b);
-      if (b != null) {
+      if (b.title != null && b.title != "") {
         _titleController.text = b.title;
         _authorController.text = b.authors;
         _descriptionController.text = b.description;
@@ -214,8 +265,11 @@ class _BookCreatePageState extends State<BookCreatePage> {
         setState(() {
           _book = b;
         });
+      }else{
+        this._showAlert(context, message: "Aucune référence associée à cet ISBN.");
       }
     } catch (e) {
+      this._showAlert(context, message: e.toString());
       //print(e.toString());
     } finally {
       setState(() {
@@ -249,17 +303,32 @@ class _BookCreatePageState extends State<BookCreatePage> {
 
   // }
 
-  void _save() {
+  void _save() async{
+    setState(() {_loading = true;});
     final form = _createFormKey.currentState;
 
     if (form.validate()) {
       form.save();
+      if(this._book.imageCover != null) {
+        // sauvegarde sur Firebase storage
+        try{
+          FirebaseStorage _storage = FirebaseStorage.instance;
+          StorageReference reference = _storage.ref().child("covers").child(this.uid).child(uuid.v1());
+          StorageUploadTask uploadTask = await reference.putFile(this._book.imageCover);
+          this._book.cover = await (await uploadTask.onComplete).ref.getDownloadURL();
+        }catch(e){
+          setState(() {_loading = false;});
+          this._showAlert(context, message: "Impossible de sauvegarder l'image de couverture. Vérifiez votre connexion réseau.");
+          return;
+        }
+      }
       FirebaseDatabase.instance
           .reference()
           .child("books")
           .child(this.uid)
           .push()
           .set(this._book.toJson());
+      setState(() {_loading = false;});
       Navigator.pop(context);
     }
   }
@@ -284,6 +353,18 @@ class _BookCreatePageState extends State<BookCreatePage> {
       setState(() => this.barcode = 'Unknown error: $e');
     }
   }
+
+  void _showAlert(BuildContext context, {String message: "Une erreur est survenue."}) {
+    showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text("Erreur"),
+          content: Text(message),
+        )
+    );
+  }
+
+
 
   // void _showDialog(context) {
   //   showDialog(
@@ -340,12 +421,50 @@ class _BookCreatePageState extends State<BookCreatePage> {
   //   );
   // }
 
+  void _search(BuildContext context) {
+    showDialog(
+        context: context,
+        builder: (context) =>
+            AlertDialog(
+              title: Text("Recherche manuelle"),
+              content: new Stack(
+                children: <Widget>[
+                  new TextField(
+                    controller: _searchController,
+                    decoration: new InputDecoration(
+                        hintText: "Indiquez un titre ou ISBN."
+                    ),
+                  )
+                ],
+              ),
+              actions: <Widget>[
+                new FlatButton(onPressed: () {
+                  Navigator.of(context).pop();
+                }, child: new Text("Fermer")),
+                new FlatButton(onPressed: () {
+                  if(this._searchController.text != null && this._searchController.text != "") {
+                    Navigator.of(context).pop();
+                    this._searchBookByISBN(this._searchController.text);
+                  }
+                }, child: new Text("Rechercher"))
+              ],
+            )
+    );
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
           title: Text("Créer un livre"),
           actions: <Widget>[
+            IconButton(
+            icon: Icon(Icons.search),
+            onPressed: () {
+                this._search(context);
+              },
+            ),
             IconButton(
               icon: Icon(Icons.camera),
               onPressed: () {
@@ -365,6 +484,6 @@ class _BookCreatePageState extends State<BookCreatePage> {
             // ),
           ],
         ),
-        body: _pageToDisplay);
+        body: _pageToDisplay(context));
   }
 }

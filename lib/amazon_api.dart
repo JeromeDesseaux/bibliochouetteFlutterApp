@@ -48,7 +48,7 @@ class AmazonRequester {
     List<String> pairs = new List<String>();
 
     params
-        .forEach((k, v) => {pairs.add("${k}=" + Uri.encodeQueryComponent(v))});
+        .forEach((k, v) => {pairs.add("${k}=" + Uri.encodeComponent(v))});
 
     pairs = pairs..sort((a, b) => a.compareTo(b));
 
@@ -64,6 +64,8 @@ class AmazonRequester {
         '&Signature=' +
         signature;
 
+    print(queryString);
+
     return queryString;
   }
 
@@ -76,10 +78,16 @@ class AmazonRequester {
     } catch (e) {
       throw Exception("Impossible d'exécuter la requête");
     }
+
+    if(response.statusCode != 200){
+      throw Exception("Paramètres invalides. Vérifier les identifiants AWS.");
+    }
+
     book.Book resBook = new book.Book();
     resBook.isbn = isbn;
 
     String body = response.body;
+    print(body);
     var document = xml.parse(body);
     try {
       String title = document.findAllElements("Title").first.text;
@@ -87,7 +95,8 @@ class AmazonRequester {
     } catch (e) {}
     try {
       String pubDate = document.findAllElements("PublicationDate").first.text;
-      resBook.publicationYear = pubDate;
+      RegExp regexPubDate = new RegExp(r".+?(?=-)", caseSensitive: false, multiLine: true);
+      resBook.publicationYear = regexPubDate.firstMatch(pubDate)[0];
     } catch (e) {}
     try {
       String author = document.findAllElements("Author").first.text;
@@ -99,12 +108,13 @@ class AmazonRequester {
     } catch (e) {}
     try {
       String imgURL = document
-          .findAllElements("MediumImage")
+          .findAllElements("LargeImage")
           .first
           .findAllElements("URL")
           .first
           .text;
-      resBook.cover = imgURL;
+      resBook.setCoverUrl(imgURL);
+      //resBook.cover = imgURL;
     } catch (e) {}
 
     return resBook;
