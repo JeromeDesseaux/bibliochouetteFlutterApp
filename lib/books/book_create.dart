@@ -242,7 +242,7 @@ class _BookCreatePageState extends State<BookCreatePage> {
     try {
       b = await awsRequester.getBookFromIsbn(isbn);
     } catch (e) {
-      this._showAlert(context, message: e.toString());
+      this._showAlert(context, message: "Requête impossible. Vérifiez votre connexion réseau.");
       //b = new Book();
       //await b.fromAmazonData(isbn);
     }
@@ -269,7 +269,7 @@ class _BookCreatePageState extends State<BookCreatePage> {
         this._showAlert(context, message: "Aucune référence associée à cet ISBN.");
       }
     } catch (e) {
-      this._showAlert(context, message: e.toString());
+      this._showAlert(context, message: "Aucune référence associée à cet ISBN.");
       //print(e.toString());
     } finally {
       setState(() {

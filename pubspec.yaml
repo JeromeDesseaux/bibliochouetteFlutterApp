@@ -7,7 +7,7 @@ description: A new Flutter project.
 # Both the version and the builder number may be overridden in flutter
 # build by specifying --build-name and --build-number, respectively.
 # Read more about versioning at semver.org.
-version: 1.0.7+8
+version: 1.0.8+9
 
 environment:
     sdk: ">=2.0.0 <3.0.0"
@@ -40,8 +40,8 @@ dependencies:
 
 flutter_icons:
     android: true
-    ios: false
-    image_path: "assets/images/logo.png"
+    ios: true
+    image_path: "assets/images/icon.png"
 
 dev_dependencies:
     flutter_test:
@@ -58,6 +58,7 @@ flutter:
     uses-material-design: true
     assets:
         - assets/images/logo.png
+        - assets/images/icon.png
         - assets/images/drawer.jpeg
         - assets/secrets.json
 

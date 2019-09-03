@@ -41,7 +41,7 @@ class AmazonRequester {
       'AssociateTag': this.associateID,
       'SearchIndex': "Books",
       'ResponseGroup': "Images,ItemAttributes,Offers",
-      'Keywords': isbn,
+      'Keywords': isbn.replaceAll("'", " "),
       "Timestamp": getFormattedDatetime()
     });
 
