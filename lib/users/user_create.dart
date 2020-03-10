@@ -1,12 +1,16 @@
 import "package:flutter/material.dart";
+import 'package:gestion_bibliotheque/models/class.dart';
+import 'package:gestion_bibliotheque/utils/classes.dart';
 import "../models/user.dart";
+import "../models/class.dart";
 import 'package:firebase_database/firebase_database.dart';
 
 class UserCreatePage extends StatefulWidget {
 
   final String uid;
+  final List<Class> classes;
 
-  UserCreatePage({Key key, @required this.uid}) : super(key: key);
+  UserCreatePage({Key key, @required this.uid, this.classes}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() {
@@ -20,20 +24,45 @@ class _UserCreatePageState extends State<UserCreatePage> {
 
   final GlobalKey<FormState> _createFormKey = GlobalKey<FormState>();
   final User _user = new User("");
+
+  List<Class> classes = new List<Class>();
   String uid;
+  var selectedClass;
+
+
+  @override
+  void initState() {
+    super.initState();
+    this._getClasses();
+  }
 
   _UserCreatePageState(uid){
     this.uid = uid;
   }
 
+  void _getClasses() async {
+    List<Class> classes = new List<Class>();
+    await getClasses(this.uid).then((c) => classes = c);
+    // await FirebaseDatabase.instance.reference().child("classes").child(this.uid).once().then((snapshot ) {
+    //   Map<dynamic,dynamic> map = snapshot.value;
+    //   map.forEach((key, json) {
+    //     Class c = Class.fromJson(new Map<String, dynamic>.from(json), key);
+    //     classes.add(c);
+    //   });
+    //   classes.add(new Class("Défaut", ""));
+    // });
+    setState(() {
+      this.classes = classes;
+    });
+  }
+
   void _save(context) {
     FirebaseDatabase.instance.reference().child("users").child(this.uid).push().set(this._user.toJson());
-    Navigator.pop(context);
+    Navigator.pop(context, true);
   }
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       appBar: AppBar(
         title: Text("Créer un utilisateur"),
@@ -56,6 +85,25 @@ class _UserCreatePageState extends State<UserCreatePage> {
                           if(value.isEmpty)
                             return "Merci d'indiquer un nom d'utilisateur";
                         },
+                      ),
+                      new DropdownButton<String>(
+                        value: selectedClass,//"-M23VpPGo6FLvkJ5Njja",//selectedClass!=null?selectedClass.classname:classes[0].classname,
+                        items: classes.map((Class classe) {
+                          return new DropdownMenuItem<String>(
+                            value: classe.uid,
+                            child: new Text(classe.classname),
+                          );
+                        }).toList(),
+                        onChanged: (newValue) {
+                          this._user.classUUID = newValue;
+                          setState(() {
+                            selectedClass = newValue;
+                          });
+                          print(this._user.toJson());
+                        },
+                        isExpanded: true,
+                        elevation: 16,
+                        hint: Text("Classe de l'élève"),
                       ),
                       Padding(
                         padding: EdgeInsets.symmetric(vertical: 16.0),

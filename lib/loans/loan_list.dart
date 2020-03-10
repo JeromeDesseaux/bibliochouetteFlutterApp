@@ -1,6 +1,7 @@
 import "package:flutter/material.dart";
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import '../components/loan_card.dart';
 import '../models/loan.dart';
 import './loan_book.dart';
 import "../loading.dart";
@@ -97,34 +98,36 @@ class _LoanListPageState extends State<LoanListPage> {
               });
             }
             int bookCount = data.length;
-            return new ListView.builder(
-              itemCount: bookCount,
-              itemBuilder: (_, int index) {
-                Loan loan = data[index];
-                return new ListTile(
-                  // leading: new CircleAvatar(
-                  //   backgroundImage: new NetworkImage(book.cover),
-                  // ),
-                  title: new Text(loan.book.title?? '<No title>'),
-                  subtitle: new Text(loan.user.username),
-                  onTap: () {
-                    print("go to loan details");
-                    // Navigator.push(
-                    //   context,
-                    //   MaterialPageRoute(
-                    //     builder: (context) => new BookDetailsPage(book: book, uid:_user.uid),
+            return Container( 
+              padding: const EdgeInsets.all(10.0),
+              child: new ListView.builder(
+                itemCount: bookCount,
+                itemBuilder: (_, int index) {
+                  Loan loan = data[index];
+                  return Card(
+                    child: LoanCard(loan: loan, onDelete: (loan) => this._showDeleteDialog(loan))
+                      // child: LoanCard(loan)
+                    // child: ListTile(
+                    //   leading: new CircleAvatar(
+                    //     backgroundImage: new NetworkImage(loan.book.cover),
                     //   ),
-                    // );
-                  },
-                  trailing: new IconButton(
-                    icon: new Icon(Icons.input),
-                    onPressed: () {
-                      this._showDeleteDialog(loan);
-                    },
-                  )
-                );
-              },
+                    //   title: new Text(loan.book.title?? '<No title>'),
+                    //   subtitle: new Text(loan.user.username),
+                    //   onTap: () {
+                    //   },
+                    //   trailing: new IconButton(
+                    //     icon: new Icon(Icons.input),
+                    //     onPressed: () {
+                    //       this._showDeleteDialog(loan);
+                    //     },
+                    //   )
+                    // )
+                    
+                  );
+                },
+              ),
             );
+            
           },
         );
     }else{
@@ -136,9 +139,10 @@ class _LoanListPageState extends State<LoanListPage> {
     Widget build(BuildContext context) {
       return new Scaffold(
         appBar: new AppBar(
-          title: new Text("BiblioChouette"),
+          title: new Text("Emprunts"),
         ),
         body: _manageDisplay(),
+        backgroundColor: Color(0xfff3f2f8),
         // drawer: new BibDrawer(user: this._user),
         floatingActionButton: new FloatingActionButton(
           elevation: 0.0,

@@ -145,8 +145,10 @@ class _BookCreatePageState extends State<BookCreatePage> {
                   // initialValue: _book.title,
                   decoration: new InputDecoration(labelText: "Titre"),
                   validator: (value) {
-                    if (value.isEmpty)
+                    if (value.isEmpty){
                       return "Merci d'indiquer le titre du livre";
+                    }
+                    return null;
                   },
                 ),
                 new TextFormField(
@@ -156,8 +158,10 @@ class _BookCreatePageState extends State<BookCreatePage> {
                   }),
                   decoration: new InputDecoration(labelText: "Auteur"),
                   validator: (value) {
-                    if (value.isEmpty)
+                    if (value.isEmpty){
                       return "Merci d'indiquer le l'auteur du livre";
+                    }
+                    return null;
                   },
                 ),
                 new TextFormField(
@@ -304,10 +308,12 @@ class _BookCreatePageState extends State<BookCreatePage> {
   // }
 
   void _save() async{
-    setState(() {_loading = true;});
     final form = _createFormKey.currentState;
 
+    print(form.validate());
+
     if (form.validate()) {
+      setState(() {_loading = true;});
       form.save();
       if(this._book.imageCover != null) {
         // sauvegarde sur Firebase storage

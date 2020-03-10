@@ -62,7 +62,7 @@ class BibDrawer extends StatelessWidget{
                         color: Colors.grey,
                       ),
                     ),
-                    new Text("Utilisateurs"),
+                    new Text("Mes utilisateurs"),
                   ],
                 ), 
                 
@@ -82,12 +82,31 @@ class BibDrawer extends StatelessWidget{
                         color: Colors.grey,
                       ),
                     ),
-                    new Text("Emprunts"),
+                    new Text("Suivi des emprunts"),
                   ],
                 ), 
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.pushNamed(context,"/loans");
+                  // Navigator.of(context).pushNamedAndRemoveUntil('/users', (Route<dynamic> route) => false);
+                },
+              ),
+              ListTile(
+                title: new Row(
+                  children: <Widget>[
+                    new Padding(
+                      padding: EdgeInsets.all(5.0),
+                      child: new Icon(
+                        Icons.bookmark,
+                        color: Colors.grey,
+                      ),
+                    ),
+                    new Text("Gérer mes groupes"),
+                  ],
+                ), 
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.pushNamed(context,"/classes");
                   // Navigator.of(context).pushNamedAndRemoveUntil('/users', (Route<dynamic> route) => false);
                 },
               ),
@@ -108,6 +127,7 @@ class BibDrawer extends StatelessWidget{
                   FirebaseAuth.instance.signOut();
                 },
               ),
+              
             ],
           ),
         );

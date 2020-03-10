@@ -13,21 +13,21 @@
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.example.gestionbibliotheque</string>
+	<string>com.jeromedesseaux.bibliochouette</string>
 	<key>PROJECT_ID</key>
 	<string>bibliochouette-7568c</string>
 	<key>STORAGE_BUCKET</key>
 	<string>bibliochouette-7568c.appspot.com</string>
 	<key>IS_ADS_ENABLED</key>
-	<false></false>
+	<false/>
 	<key>IS_ANALYTICS_ENABLED</key>
-	<false></false>
+	<false/>
 	<key>IS_APPINVITE_ENABLED</key>
-	<true></true>
+	<true/>
 	<key>IS_GCM_ENABLED</key>
-	<true></true>
+	<true/>
 	<key>IS_SIGNIN_ENABLED</key>
-	<true></true>
+	<true/>
 	<key>GOOGLE_APP_ID</key>
 	<string>1:554944219261:ios:ff50d08d8381029c</string>
 	<key>DATABASE_URL</key>

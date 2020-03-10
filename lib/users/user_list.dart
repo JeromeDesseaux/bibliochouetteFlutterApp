@@ -1,12 +1,16 @@
 import "package:flutter/material.dart";
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:gestion_bibliotheque/components/user_card.dart';
+import 'package:gestion_bibliotheque/models/class.dart';
+import 'package:gestion_bibliotheque/utils/classes.dart';
 import '../models/user.dart';
 import "./user_create.dart";
 import "./user_details.dart";
 import "../models/loan.dart";
 import "../MyBullet.dart";
 import "../loading.dart";
+import 'package:grouped_list/grouped_list.dart';
 
 class UserListPage extends StatefulWidget {
   @override
@@ -20,6 +24,9 @@ class UserListPage extends StatefulWidget {
 class _UserListPageState extends State<UserListPage> {
 
   FirebaseUser _user;
+  List<Class> classes = new List<Class>();
+  List<User> users = new List<User>();
+  List<Loan> loans = new List<Loan>();
 
   @override
   void initState() {
@@ -28,6 +35,44 @@ class _UserListPageState extends State<UserListPage> {
       setState(() {
         _user = user;
       });
+      this._getClasses(user);
+      this._getUsers(user);
+      this._getLoans(user);
+    });
+  }
+
+  void _getClasses(user) async {
+    List<Class> classes = new List<Class>();
+    await getClasses(user.uid).then((c) => classes = c);
+    setState(() {
+      this.classes = classes;
+    });
+  }
+
+  void _getUsers(user) async {
+    List<User> users = new List<User>();
+    await getUsers(user.uid).then((c) => users = c);
+    setState(() {
+      this.users = users;
+    });
+  }
+
+  void _getLoans(user) async {
+    List<Loan> loans = new List<Loan>();
+    await getLoans(user.uid).then((c) => loans = c);
+    setState(() {
+      this.loans = loans;
+    });
+  }
+
+  void refreshData() {
+    FirebaseAuth.instance.currentUser().then((user) {
+      setState(() {
+        _user = user;
+      });
+      this._getClasses(user);
+      this._getUsers(user);
+      this._getLoans(user);
     });
   }
 
@@ -37,7 +82,7 @@ class _UserListPageState extends State<UserListPage> {
       MaterialPageRoute(
         builder: (context) => new UserCreatePage(uid: this._user.uid),
       ),
-    );
+    ).then((onValue) => onValue?this.refreshData():null);
   }
 
   void _showDeleteDialog(userUID) {
@@ -59,96 +104,70 @@ class _UserListPageState extends State<UserListPage> {
               onPressed: () {
                 // print("DELETE $userUID");
                 FirebaseDatabase.instance.reference().child("users").child(this._user.uid).child(userUID).remove();
-                Navigator.pop(context);
+                Navigator.pop(context,true);
+                this.refreshData();
               },
             )
           ],
 
         );
       },
-    );  
+    );
+  }
+
+  List<Widget> _buildTiles() {
+    List<Widget> expansionsTiles = [];
+    if(this.users != null && this.users.length > 0 ) {
+      this.classes.forEach((classe) {
+        List<Widget> children = new List<Widget>();
+        var users = this.users.where((user) => user.classUUID == classe.uid || user.getClass(_user.uid) == null);
+        var lu = users.length;
+        users.forEach((user) {
+          children.add(UserCard(loans: this.loans, user: user, onDelete: this._showDeleteDialog,));
+          // children.add(ListTile(title: Text(user.username)));
+        });
+        var w = ExpansionTile(
+          key: PageStorageKey<Class>(classe),
+          title: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                classe.classname,
+                style: TextStyle(
+                  color: Colors.blueGrey[700],
+                  fontSize: 18,
+                  fontWeight: FontWeight.w300
+                ),
+              ),
+              Text(
+                lu<=1?"$lu élève":"$lu élèves",
+                style: TextStyle(
+                  color: Colors.blue[400],
+                  fontSize: 13,
+                  fontWeight: FontWeight.w200
+                ),
+              )
+            ]
+          ),
+          children: children.toList(),
+        );
+        expansionsTiles.add(w);
+      });
+      return expansionsTiles;
+    }
+    return null;
   }
 
   Widget _manageDisplay() {
-    if(_user != null){
-      return new StreamBuilder<Event>(
-          stream: FirebaseDatabase.instance.reference().child("users").child(_user.uid).onValue,
-          builder: (BuildContext context, AsyncSnapshot<Event> snapshot) {
-
-            if (!snapshot.hasData) return LoadingScreen();
-
-            Map<dynamic, dynamic> map = snapshot.data.snapshot.value;
-            var data = [];
-            if(map != null) {
-              map.forEach((i, v) {
-                var user = User.fromJson(new Map<String, dynamic>.from(v), i);
-                data.add(user);
-                data.sort((a,b) => a.username.compareTo(b.username));
-              });
-            }
-            int bookCount = data.length;
-            return StreamBuilder<Event>(
-              stream: FirebaseDatabase.instance.reference().child("loans").child(_user.uid).onValue,
-              builder: (BuildContext context, AsyncSnapshot<Event> snapshot) {
-                if (!snapshot.hasData) return LoadingScreen();
-                Map<dynamic, dynamic> map = snapshot.data.snapshot.value;
-                List<Loan> loans = [];
-                if(map != null) {
-                  map.forEach((i, v) {
-                    Loan loan = Loan.fromJson(new Map<String, dynamic>.from(v), i);
-                    loans.add(loan);
-                  });
-                }
-
-                return new ListView.builder(
-                  itemCount: bookCount,
-                  itemBuilder: (_, int index) {
-                    User user = data[index];
-                    List<Loan> userLoans;
-                    List<Loan> currentLoans;
-                    try{
-                      userLoans = loans.where((loan) => loan.user.uid == user.uid).toList(); 
-                      currentLoans = userLoans.where((loan) => loan.returnDateValidated==null).toList();
-                    }catch(e){}
-                    return new ListTile(
-                      // leading: new CircleAvatar(
-                      //   backgroundImage: new NetworkImage(book.cover),
-                      // ),
-                      title: new Text(user.username?? '<No username>'),
-                      subtitle: new Text(
-                        userLoans.length==0?"Aucun emprunt":userLoans.length.toString()+" emprunts dont "+currentLoans.length.toString()+" en attente."
-                        //book.authors
-                      ),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => new UserDetailsPage(user: user, fuser: _user, loans: userLoans),
-                          ),
-                        );
-                      },
-                      trailing: new Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        mainAxisSize: MainAxisSize.min,
-                        children: <Widget>[
-                          new MyBullet(
-                            isGreen: currentLoans.length==0,
-                          ),
-                          new IconButton(
-                            icon: new Icon(Icons.delete),
-                            onPressed: () {
-                              this._showDeleteDialog(user.uid);
-                            },
-                          ),
-                        ],
-                      )
-                    );
-                  },
-                );
-              },
-            ); 
-          },
-        );
+    if(users.length > 0){
+      return new Container( 
+              padding: const EdgeInsets.all(10.0),
+              child: ListView(
+                padding: const EdgeInsets.all(8),
+                children: this._buildTiles()
+              )
+            );
     }else{
       return new Text("FETCHING DATA");
     }
@@ -156,11 +175,13 @@ class _UserListPageState extends State<UserListPage> {
 
   @override
     Widget build(BuildContext context) {
+      print(classes);
       return new Scaffold(
         appBar: new AppBar(
           title: new Text("Bibliochouette"),
         ),
         body: _manageDisplay(),
+        backgroundColor: Color(0xfff3f2f8),
         // drawer: new BibDrawer(user: this._user),
         floatingActionButton: new FloatingActionButton(
           elevation: 0.0,

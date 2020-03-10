@@ -31,6 +31,7 @@ dependencies:
     html: ^0.13.3+3
     flutter_launcher_icons: "^0.7.0"
     image_picker: ^0.6.0+3
+    grouped_list: ^1.2.1
 
     # cloud_firestore: ^0.8.0
 
