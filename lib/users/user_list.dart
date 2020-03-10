@@ -1,6 +1,7 @@
 import "package:flutter/material.dart";
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:gestion_bibliotheque/components/empty_data.dart';
 import 'package:gestion_bibliotheque/components/user_card.dart';
 import 'package:gestion_bibliotheque/models/class.dart';
 import 'package:gestion_bibliotheque/utils/classes.dart';
@@ -169,7 +170,10 @@ class _UserListPageState extends State<UserListPage> {
               )
             );
     }else{
-      return new Text("FETCHING DATA");
+      return new EmptyData(
+        title: "Oopps! Aucun utilisateur créé pour le moment 😓",
+        subtitle: "Cliquez sur le bouton ci-dessous pour en ajouter un."
+      );
     }
   }
 

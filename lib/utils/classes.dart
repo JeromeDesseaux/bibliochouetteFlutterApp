@@ -22,10 +22,12 @@ Future<List<User>> getUsers(userId) async {
   List<User> classes = new List<User>();
   await FirebaseDatabase.instance.reference().child("users").child(userId).once().then((snapshot ) {
     Map<dynamic,dynamic> map = snapshot.value;
-    map.forEach((key, json) {
-      User c = User.fromJson(new Map<String, dynamic>.from(json), key);
-      classes.add(c);
-    });
+    if(map!=null){
+      map.forEach((key, json) {
+        User c = User.fromJson(new Map<String, dynamic>.from(json), key);
+        classes.add(c);
+      });
+    }
   });
   return classes;
 }

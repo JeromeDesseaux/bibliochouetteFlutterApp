@@ -2,6 +2,7 @@ import "package:flutter/material.dart";
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:gestion_bibliotheque/classes/class_create.dart';
+import 'package:gestion_bibliotheque/components/empty_data.dart';
 import 'package:gestion_bibliotheque/models/class.dart';
 import '../models/class.dart';
 // import "./user_create.dart";
@@ -125,25 +126,9 @@ class _ClassListPageState extends State<ClassListPage> {
                   );
 
             } else {
-              return new Container(
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: <Widget>[
-                      Text(
-                        "Oopps! Aucun groupe créé pour le moment 😓",
-                        style: TextStyle(
-                          color: Colors.red[800],
-                          fontWeight: FontWeight.w300,
-                          fontSize: 16
-                        ),
-                      ),
-                      SizedBox(height: 10),
-                      Text("Cliquez sur le bouton ci-dessous pour en ajouter un.")
-                    ],
-                  )
-                )
+              return new EmptyData(
+                title: "Oopps! Aucun groupe créé pour le moment 😓",
+                subtitle: "Cliquez sur le bouton ci-dessous pour en ajouter un.",
               );
             }
             // return StreamBuilder<Event>(
