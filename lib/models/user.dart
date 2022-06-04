@@ -11,28 +11,31 @@ class User {
   // update/create date?
   // User type?
 
-  User(
-    this.username
-  );
+  User(this.username);
 
-  User.fromJson(Map<String, dynamic> json, String _uid):
-    uid=_uid,
-    username=json["username"],
-    classUUID=json["class"]!=null?json["class"]:"";
-
+  User.fromJson(Map<String, dynamic> json, String _uid)
+      : uid = _uid,
+        username = json["username"],
+        classUUID = json["class"] != null ? json["class"] : "";
 
   Map<String, dynamic> toJson({bool withUID: false}) {
     return {
-      'uid': withUID?this.uid:null,
+      'uid': withUID ? this.uid : null,
       'username': this.username,
       'class': this.classUUID,
     };
   }
 
   Class getClass(userUUID) {
-    FirebaseDatabase.instance.reference().child("classes").child(userUUID).child(this.classUUID).once().then((snapshot ) {
-      Map<dynamic,dynamic> map = snapshot.value;
-      if(map!=null) {
+    FirebaseDatabase.instance
+        .ref()
+        .child("classes")
+        .child(userUUID)
+        .child(this.classUUID)
+        .once()
+        .then((snapshot) {
+      Map<dynamic, dynamic> map = snapshot.value;
+      if (map != null) {
         map.forEach((key, json) {
           Class c = Class.fromJson(new Map<String, dynamic>.from(json), key);
           return c;
@@ -44,7 +47,6 @@ class User {
   }
 
   List<Loan> getLoans(List<Loan> allLoans) {
-    return allLoans.where((loan) => loan.user.uid == this.uid).toList(); 
-    
+    return allLoans.where((loan) => loan.user.uid == this.uid).toList();
   }
 }

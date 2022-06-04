@@ -10,10 +10,11 @@ import 'dart:io';
 class Book {
   String uid = "";
   String title;
-  String authors; 
+  String authors;
   String description;
   String pageCount;
-  String cover = "https://d4804za1f1gw.cloudfront.net/wp-content/uploads/sites/30/2018/03/30075855/Rare-Books-Thumbnail-248x300.jpg";
+  String cover =
+      "https://d4804za1f1gw.cloudfront.net/wp-content/uploads/sites/30/2018/03/30075855/Rare-Books-Thumbnail-248x300.jpg";
   String isbn;
   String publicationYear;
   File imageCover;
@@ -23,10 +24,10 @@ class Book {
   Book();
 
   // Book(
-  //   this.title, 
-  //   this.authors, 
-  //   this.description, 
-  //   this.pageCount, 
+  //   this.title,
+  //   this.authors,
+  //   this.description,
+  //   this.pageCount,
   //   this.cover,
   //   this.isbn,
   //   this.publicationYear
@@ -42,24 +43,24 @@ class Book {
     this.imageCover = null;
   }
 
-  Book.fromJson(Map<String, dynamic> json, String _uid):
-    uid=_uid,
-    title=json['title'],
-    authors=json['authors'],
-    description=json['description'],
-    pageCount=json['pageCount'],
-    cover=json['cover'],
-    isbn=json['isbn'],
-    publicationYear=json['publicationYear'];
+  Book.fromJson(Map<String, dynamic> json, String _uid)
+      : uid = _uid,
+        title = json['title'],
+        authors = json['authors'],
+        description = json['description'],
+        pageCount = json['pageCount'],
+        cover = json['cover'],
+        isbn = json['isbn'],
+        publicationYear = json['publicationYear'];
 
-  Map<String, dynamic> toJson({bool withUID: false}){
+  Map<String, dynamic> toJson({bool withUID: false}) {
     String tmpdesc = this.description;
     // var rng = new Random();
-    if(withUID){
+    if (withUID) {
       tmpdesc = "";
     }
     return {
-      'uid': withUID?uid:null,
+      'uid': withUID ? uid : null,
       'title': title,
       'authors': authors,
       'description': tmpdesc,
@@ -71,99 +72,119 @@ class Book {
   }
 
   Future<Document> getBookDocumentByISBN(String isbn) async {
-  try{
-    String url = "https://www.amazon.fr/s?k="+isbn;
-    http.Response response = await http.get(url, headers: {
-       'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.90 Safari/537.36'
-    });
-    Document document = parser.parse(response.body);
-    String bookLink = document.getElementsByClassName("s-result-list").first.getElementsByClassName("a-link-normal").first.attributes['href'];
-    http.Response bookPage = await http.get('https://www.amazon.fr'+bookLink, headers: {
-       'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.90 Safari/537.36'
-    });
-    return parser.parse(bookPage.body);
-  }catch(e){
-    return null;
-  }
-}
-
-String getTitleFromBook(Document bookPage) {
-  String title = "";
-  try{
-    if(bookPage.getElementById('ebooksProductTitle')==null){
-      title = bookPage.getElementById("productTitle").text;
-    }else{
-      title = bookPage.getElementById("ebooksProductTitle").text;
+    try {
+      String url = "https://www.amazon.fr/s?k=" + isbn;
+      Uri uri = new Uri(path: url);
+      http.Response response = await http.get(uri, headers: {
+        'User-Agent':
+            'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.90 Safari/537.36'
+      });
+      Document document = parser.parse(response.body);
+      String bookLink = document
+          .getElementsByClassName("s-result-list")
+          .first
+          .getElementsByClassName("a-link-normal")
+          .first
+          .attributes['href'];
+      Uri bookLinkUri = new Uri(path: 'https://www.amazon.fr' + bookLink);
+      http.Response bookPage = await http.get(bookLinkUri, headers: {
+        'User-Agent':
+            'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.90 Safari/537.36'
+      });
+      return parser.parse(bookPage.body);
+    } catch (e) {
+      return null;
     }
-  }catch(e){
-    title = e.toString();
   }
-  return title.trim();
-}
 
-String getPublicationYearFromBook(Document bookPage) {
-  return "";
-}
+  String getTitleFromBook(Document bookPage) {
+    String title = "";
+    try {
+      if (bookPage.getElementById('ebooksProductTitle') == null) {
+        title = bookPage.getElementById("productTitle").text;
+      } else {
+        title = bookPage.getElementById("ebooksProductTitle").text;
+      }
+    } catch (e) {
+      title = e.toString();
+    }
+    return title.trim();
+  }
 
-String getAuthors(Document bookPage){
-  String authors;
-  try{
+  String getPublicationYearFromBook(Document bookPage) {
+    return "";
+  }
+
+  String getAuthors(Document bookPage) {
+    String authors;
+    try {
       List<String> authorsList = new List();
 
       bookPage.getElementsByClassName("author").forEach((Element elem) {
-        try{
-          authorsList.add(elem.getElementsByClassName("contributorNameID").first.text);
-        }catch(e){
-          authorsList.add(elem.getElementsByClassName("a-link-normal").first.text);
+        try {
+          authorsList
+              .add(elem.getElementsByClassName("contributorNameID").first.text);
+        } catch (e) {
+          authorsList
+              .add(elem.getElementsByClassName("a-link-normal").first.text);
         }
       });
       authors = authorsList.join(', ');
-    }catch(e){}
+    } catch (e) {}
     return authors;
-}
+  }
 
-String getImage(Document bookPage){
-  Element cover;
-  String coverLink;
-  try{
-    if(bookPage.getElementById("ebooksImgBlkFront")!=null){
-      cover = bookPage.getElementById("ebooksImgBlkFront");
-    }else{
-      cover = bookPage.getElementById("imgBlkFront");
+  String getImage(Document bookPage) {
+    Element cover;
+    String coverLink;
+    try {
+      if (bookPage.getElementById("ebooksImgBlkFront") != null) {
+        cover = bookPage.getElementById("ebooksImgBlkFront");
+      } else {
+        cover = bookPage.getElementById("imgBlkFront");
+      }
+    } catch (e) {
+      coverLink =
+          "https://d4804za1f1gw.cloudfront.net/wp-content/uploads/sites/30/2018/03/30075855/Rare-Books-Thumbnail-248x300.jpg";
     }
-  }catch(e){
-    coverLink = "https://d4804za1f1gw.cloudfront.net/wp-content/uploads/sites/30/2018/03/30075855/Rare-Books-Thumbnail-248x300.jpg";
+    if (coverLink == null && cover != null) {
+      coverLink = cover.attributes['data-a-dynamic-image'];
+      RegExp bookImageLinkRegex =
+          new RegExp(r"(https.*?jpg)", caseSensitive: false, multiLine: false);
+      coverLink =
+          bookImageLinkRegex.allMatches(coverLink).elementAt(0).group(1);
+    }
+    return coverLink;
   }
-  if(coverLink==null && cover!=null){
-    coverLink = cover.attributes['data-a-dynamic-image'];
-    RegExp bookImageLinkRegex = new RegExp(r"(https.*?jpg)",caseSensitive: false, multiLine: false);
-    coverLink = bookImageLinkRegex.allMatches(coverLink).elementAt(0).group(1);
+
+  String getDescription(Document bookPage) {
+    String description = "";
+    try {
+      String rawDescription = bookPage
+          .getElementById("bookDescription_feature_div")
+          .getElementsByTagName("noscript")
+          .first
+          .innerHtml; //getElementsByTagName("div").first.text
+      RegExp bookDescriptionRegex = new RegExp(r"<div>(.*)<\/div>",
+          caseSensitive: false, multiLine: false);
+      String desc =
+          bookDescriptionRegex.allMatches(rawDescription).elementAt(0).group(1);
+      var document = parse(desc);
+      description = parse(document.body.text).documentElement.text;
+    } catch (e) {}
+    return description.trim();
   }
-  return coverLink;
-}
 
-String getDescription(Document bookPage){
-  String description = "";
-  try{
-    String rawDescription = bookPage.getElementById("bookDescription_feature_div").getElementsByTagName("noscript").first.innerHtml; //getElementsByTagName("div").first.text
-    RegExp bookDescriptionRegex = new RegExp(r"<div>(.*)<\/div>",caseSensitive: false, multiLine: false);
-    String desc = bookDescriptionRegex.allMatches(rawDescription).elementAt(0).group(1);
-    var document = parse(desc);
-    description = parse(document.body.text).documentElement.text;
-  }catch(e){}
-  return description.trim();
-}
-
-fromAmazonData(String isbn) async {
+  fromAmazonData(String isbn) async {
     Document bookDocument = await getBookDocumentByISBN(isbn);
-    if(bookDocument!=null){
+    if (bookDocument != null) {
       this.title = getTitleFromBook(bookDocument);
       this.authors = getAuthors(bookDocument);
       this.cover = getImage(bookDocument);
       this.description = getDescription(bookDocument);
       this.publicationYear = getPublicationYearFromBook(bookDocument);
     }
-}
+  }
 
   // fromAmazonData(String isbn) async {
   //   String url = "https://www.amazon.fr/s/ref=nb_sb_noss?__mk_fr_FR=%C3%85M%C3%85%C5%BD%C3%95%C3%91&url=search-alias%3Daps&field-keywords="+isbn;
@@ -213,9 +234,8 @@ fromAmazonData(String isbn) async {
   //     this.cover = "https://d4804za1f1gw.cloudfront.net/wp-content/uploads/sites/30/2018/03/30075855/Rare-Books-Thumbnail-248x300.jpg";
   //   }
 
-
   //   try{
-      
+
   //     //   print(bookDocument.getElementsByClassName("productDescriptionWrapper").first.innerHtml);
   //     // if(bookDocument.getElementsByClassName("productDescriptionWrapper").first!=null){
   //     // }else{
@@ -227,7 +247,7 @@ fromAmazonData(String isbn) async {
 
   //     this.description = parsedString;
   //     // }
-      
+
   //   }catch(e){}
 
   //   try{
@@ -279,5 +299,5 @@ fromAmazonData(String isbn) async {
   //     publicationYear= "2018";
   //   }
   // }
-    // publicationYear=data['items'][0]['volumeInfo']["publishedDate"].substr(0, data['item'][0]["volumeInfo"]["publishedDate"].indexOf('-'));
+  // publicationYear=data['items'][0]['volumeInfo']["publishedDate"].substr(0, data['item'][0]["volumeInfo"]["publishedDate"].indexOf('-'));
 }

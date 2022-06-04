@@ -15,20 +15,15 @@ class ClassListPage extends StatefulWidget {
     return new _ClassListPageState();
   }
 }
-  
-  
 
 class _ClassListPageState extends State<ClassListPage> {
-
-  FirebaseUser _user;
+  User _user;
 
   @override
   void initState() {
     super.initState();
-    FirebaseAuth.instance.currentUser().then((user) {
-      setState(() {
-        _user = user;
-      });
+    setState(() {
+      _user = FirebaseAuth.instance.currentUser;
     });
   }
 
@@ -49,125 +44,130 @@ class _ClassListPageState extends State<ClassListPage> {
           title: new Text("Êtes-vous sûr?"),
           content: new Text("Cette action est irréversible."),
           actions: <Widget>[
-            new FlatButton(
+            new TextButton(
               child: new Text('Annuler'),
               onPressed: () {
                 Navigator.pop(context);
               },
             ),
-            new FlatButton(
+            new TextButton(
               child: new Text("Supprimer"),
               onPressed: () {
                 // print("DELETE $userUID");
-                FirebaseDatabase.instance.reference().child("classes").child(this._user.uid).child(classUUID).remove();
+                FirebaseDatabase.instance
+                    .ref()
+                    .child("classes")
+                    .child(this._user.uid)
+                    .child(classUUID)
+                    .remove();
                 Navigator.pop(context);
               },
             )
           ],
-
         );
       },
-    );  
+    );
   }
 
   Widget _manageDisplay() {
-    if(_user != null){
+    if (_user != null) {
       return new StreamBuilder<Event>(
-          stream: FirebaseDatabase.instance.reference().child("classes").child(_user.uid).onValue,
-          builder: (BuildContext context, AsyncSnapshot<Event> snapshot) {
+        stream: FirebaseDatabase.instance
+            .ref()
+            .child("classes")
+            .child(_user.uid)
+            .onValue,
+        builder: (BuildContext context, AsyncSnapshot<Event> snapshot) {
+          if (!snapshot.hasData) return LoadingScreen();
 
-            if (!snapshot.hasData) return LoadingScreen();
-
-            Map<dynamic, dynamic> map = snapshot.data.snapshot.value;
-            var data = [];
-            if(map != null) {
-              map.forEach((i, v) {
-                var myclass = Class.fromJson(new Map<String, dynamic>.from(v), i);
-                data.add(myclass);
-                data.sort((a,b) => a.classname.compareTo(b.classname));
-              });
-            }
-            int classesCount = data.length;
-            if (classesCount > 0 ) {
-              return new ListView.builder(
-                    itemCount: classesCount,
-                    itemBuilder: (_, int index) {
-                      Class myclass = data[index];
-                      return new ListTile(
-                        // leading: new CircleAvatar(
-                        //   backgroundImage: new NetworkImage(book.cover),
-                        // ),
-                        title: new Text(myclass.classname?? '<Aucun nom>'),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              // builder: (context) => new UserDetailsPage(user: user, fuser: _user, loans: userLoans),
+          Map<dynamic, dynamic> map = snapshot.data.snapshot.value;
+          var data = [];
+          if (map != null) {
+            map.forEach((i, v) {
+              var myclass = Class.fromJson(new Map<String, dynamic>.from(v), i);
+              data.add(myclass);
+              data.sort((a, b) => a.classname.compareTo(b.classname));
+            });
+          }
+          int classesCount = data.length;
+          if (classesCount > 0) {
+            return new ListView.builder(
+              itemCount: classesCount,
+              itemBuilder: (_, int index) {
+                Class myclass = data[index];
+                return new ListTile(
+                    // leading: new CircleAvatar(
+                    //   backgroundImage: new NetworkImage(book.cover),
+                    // ),
+                    title: new Text(myclass.classname ?? '<Aucun nom>'),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            // builder: (context) => new UserDetailsPage(user: user, fuser: _user, loans: userLoans),
                             ),
-                          );
-                        },
-                        trailing: new Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          mainAxisSize: MainAxisSize.min,
-                          children: <Widget>[
-                            // new MyBullet(
-                            //   isGreen: currentLoans.length==0,
-                            // ),
-                            new IconButton(
-                              icon: new Icon(Icons.delete),
-                              onPressed: () {
-                                this._showDeleteDialog(myclass.uid);
-                              },
-                            ),
-                          ],
-                        )
                       );
                     },
-                  );
+                    trailing: new Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        // new MyBullet(
+                        //   isGreen: currentLoans.length==0,
+                        // ),
+                        new IconButton(
+                          icon: new Icon(Icons.delete),
+                          onPressed: () {
+                            this._showDeleteDialog(myclass.uid);
+                          },
+                        ),
+                      ],
+                    ));
+              },
+            );
+          } else {
+            return new EmptyData(
+              title: "Oopps! Aucun groupe créé pour le moment 😓",
+              subtitle: "Cliquez sur le bouton ci-dessous pour en ajouter un.",
+            );
+          }
+          // return StreamBuilder<Event>(
+          //   stream: FirebaseDatabase.instance.ref().child("loans").child(_user.uid).onValue,
+          //   builder: (BuildContext context, AsyncSnapshot<Event> snapshot) {
+          //     if (!snapshot.hasData) return LoadingScreen();
+          //     Map<dynamic, dynamic> map = snapshot.data.snapshot.value;
+          //     List<Loan> loans = [];
+          //     if(map != null) {
+          //       map.forEach((i, v) {
+          //         Loan loan = Loan.fromJson(new Map<String, dynamic>.from(v), i);
+          //         loans.add(loan);
+          //       });
+          //     }
 
-            } else {
-              return new EmptyData(
-                title: "Oopps! Aucun groupe créé pour le moment 😓",
-                subtitle: "Cliquez sur le bouton ci-dessous pour en ajouter un.",
-              );
-            }
-            // return StreamBuilder<Event>(
-            //   stream: FirebaseDatabase.instance.reference().child("loans").child(_user.uid).onValue,
-            //   builder: (BuildContext context, AsyncSnapshot<Event> snapshot) {
-            //     if (!snapshot.hasData) return LoadingScreen();
-            //     Map<dynamic, dynamic> map = snapshot.data.snapshot.value;
-            //     List<Loan> loans = [];
-            //     if(map != null) {
-            //       map.forEach((i, v) {
-            //         Loan loan = Loan.fromJson(new Map<String, dynamic>.from(v), i);
-            //         loans.add(loan);
-            //       });
-            //     }
-
-                
-            //   },
-            // ); 
-          },
-        );
-    }else{
+          //   },
+          // );
+        },
+      );
+    } else {
       return new Text("FETCHING DATA");
     }
   }
 
   @override
-    Widget build(BuildContext context) {
-      return new Scaffold(
-        appBar: new AppBar(
-          title: new Text("Bibliochouette"),
-        ),
-        body: _manageDisplay(),
-        // drawer: new BibDrawer(user: this._user),
-        floatingActionButton: new FloatingActionButton(
+  Widget build(BuildContext context) {
+    return new Scaffold(
+      appBar: new AppBar(
+        title: new Text("Bibliochouette"),
+      ),
+      body: _manageDisplay(),
+      // drawer: new BibDrawer(user: this._user),
+      floatingActionButton: new FloatingActionButton(
           elevation: 0.0,
           child: new Icon(Icons.bookmark),
           backgroundColor: new Color(0xFFE57373),
-          onPressed: (){_addClass();}
-        ),
-      );
-    }
+          onPressed: () {
+            _addClass();
+          }),
+    );
+  }
 }

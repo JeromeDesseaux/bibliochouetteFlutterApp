@@ -16,13 +16,10 @@ class BookListPage extends StatefulWidget {
   }
 }
 
-
 class _BookListPageState extends State<BookListPage> {
-
-  FirebaseUser _user;
+  User _user;
   TextEditingController controller = new TextEditingController();
   String filter;
-  
 
   @override
   void dispose() {
@@ -38,10 +35,8 @@ class _BookListPageState extends State<BookListPage> {
         filter = controller.text;
       });
     });
-    FirebaseAuth.instance.currentUser().then((user) {
-      setState(() {
-        _user = user;
-      });
+    setState(() {
+      _user = FirebaseAuth.instance.currentUser;
     });
   }
 
@@ -54,8 +49,6 @@ class _BookListPageState extends State<BookListPage> {
     );
   }
 
-  
-
   void _showDeleteDialog(bookUID) {
     showDialog(
       context: context,
@@ -64,89 +57,102 @@ class _BookListPageState extends State<BookListPage> {
           title: new Text("Êtes-vous sûr?"),
           content: new Text("Cette action est irréversible."),
           actions: <Widget>[
-            new FlatButton(
+            new TextButton(
               child: new Text('Annuler'),
               onPressed: () {
                 Navigator.pop(context);
               },
             ),
-            new FlatButton(
+            new TextButton(
               child: new Text("Supprimer"),
               onPressed: () {
-                FirebaseDatabase.instance.reference().child("books").child(this._user.uid).child(bookUID).remove();
+                FirebaseDatabase.instance
+                    .ref()
+                    .child("books")
+                    .child(this._user.uid)
+                    .child(bookUID)
+                    .remove();
                 Navigator.pop(context);
               },
             )
           ],
-
         );
       },
-    );  
+    );
   }
 
   Widget _manageDisplay() {
-    if(_user != null){
+    if (_user != null) {
       return new StreamBuilder<Event>(
-          stream: FirebaseDatabase.instance.reference().child("books").child(_user.uid).onValue,
-          builder: (BuildContext context, AsyncSnapshot<Event> snapshot) {
-            if (!snapshot.hasData) return LoadingScreen();
+        stream: FirebaseDatabase.instance
+            .ref()
+            .child("books")
+            .child(_user.uid)
+            .onValue,
+        builder: (BuildContext context, AsyncSnapshot<Event> snapshot) {
+          if (!snapshot.hasData) return LoadingScreen();
 
-            Map<dynamic, dynamic> map = snapshot.data.snapshot.value;
-            List<Book> data = new List<Book>();
-            if(map != null) {
-              map.forEach((i, v) {
-                var book = Book.fromJson(new Map<String, dynamic>.from(v), i);
-                data.add(book);
-                data.sort((a,b) => a.title.compareTo(b.title));
-              });
-              if(this.filter!=null)
-                data = data.where((book) => book.title.toLowerCase().contains(this.filter.toLowerCase())).toList();
-            }
-            int bookCount = data.length;
-            return new StreamBuilder<Event>(
-              stream: FirebaseDatabase.instance.reference().child("loans").child(_user.uid).orderByChild("returnDateValidated").equalTo(null).onValue,
-              builder: (BuildContext context, AsyncSnapshot<Event> snapshot) {
-                if (!snapshot.hasData) return LoadingScreen();
-                Map<dynamic, dynamic> map = snapshot.data.snapshot.value;
-                List<String> loansISBN = [];
-                List<Loan> loans = [];
-                if(map != null) {
-                  map.forEach((i, v) {
-                    var loan = Loan.fromJson(new Map<String, dynamic>.from(v), i);
-                    loansISBN.add(loan.book.uid);
-                    loans.add(loan);
-                  });
-                }
+          Map<dynamic, dynamic> map = snapshot.data.snapshot.value;
+          List<Book> data = new List<Book>();
+          if (map != null) {
+            map.forEach((i, v) {
+              var book = Book.fromJson(new Map<String, dynamic>.from(v), i);
+              data.add(book);
+              data.sort((a, b) => a.title.compareTo(b.title));
+            });
+            if (this.filter != null)
+              data = data
+                  .where((book) => book.title
+                      .toLowerCase()
+                      .contains(this.filter.toLowerCase()))
+                  .toList();
+          }
+          int bookCount = data.length;
+          return new StreamBuilder<Event>(
+            stream: FirebaseDatabase.instance
+                .ref()
+                .child("loans")
+                .child(_user.uid)
+                .orderByChild("returnDateValidated")
+                .equalTo(null)
+                .onValue,
+            builder: (BuildContext context, AsyncSnapshot<Event> snapshot) {
+              if (!snapshot.hasData) return LoadingScreen();
+              Map<dynamic, dynamic> map = snapshot.data.snapshot.value;
+              List<String> loansISBN = [];
+              List<Loan> loans = [];
+              if (map != null) {
+                map.forEach((i, v) {
+                  var loan = Loan.fromJson(new Map<String, dynamic>.from(v), i);
+                  loansISBN.add(loan.book.uid);
+                  loans.add(loan);
+                });
+              }
 
-                return new Column(
-                  children: <Widget>[
-                    new Container(
-                      margin: const EdgeInsets.only(left: 20.0, right: 20.0, bottom: 10.0),
-                      child: TextFormField(
-                          decoration: new  InputDecoration(
-                            labelText: "Rechercher un titre",
-                            prefixIcon: Icon(
-                              Icons.search
-                            )
-
-                        ),
-                        controller: controller,
-                      ),
+              return new Column(
+                children: <Widget>[
+                  new Container(
+                    margin: const EdgeInsets.only(
+                        left: 20.0, right: 20.0, bottom: 10.0),
+                    child: TextFormField(
+                      decoration: new InputDecoration(
+                          labelText: "Rechercher un titre",
+                          prefixIcon: Icon(Icons.search)),
+                      controller: controller,
                     ),
-                    
-                    
-                    new Expanded(
-                      child: new ListView.builder(
-                        itemCount: bookCount,
-                        itemBuilder: (_, int index) {
-                          Book book = data[index];
-                          Loan loan; 
-                          try {
-                            loan = loans.firstWhere((l) => l.book.uid == book.uid); 
-                          }catch(e) {
-                          }
-                          
-                          return new ListTile(
+                  ),
+                  new Expanded(
+                    child: new ListView.builder(
+                      itemCount: bookCount,
+                      itemBuilder: (_, int index) {
+                        Book book = data[index];
+                        Loan loan;
+                        try {
+                          loan =
+                              loans.firstWhere((l) => l.book.uid == book.uid);
+                        } catch (e) {}
+
+                        return new ListTile(
                             leading: new CircleAvatar(
                               backgroundImage: new NetworkImage(book.cover),
                             ),
@@ -156,7 +162,8 @@ class _BookListPageState extends State<BookListPage> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => new BookDetailsPage(book: book, uid:_user.uid, loan: loan),
+                                  builder: (context) => new BookDetailsPage(
+                                      book: book, uid: _user.uid, loan: loan),
                                 ),
                               );
                             },
@@ -165,46 +172,47 @@ class _BookListPageState extends State<BookListPage> {
                               mainAxisSize: MainAxisSize.min,
                               children: <Widget>[
                                 new MyBullet(
-                                  isGreen: loansISBN.contains(book.uid)?false:true,
+                                  isGreen: loansISBN.contains(book.uid)
+                                      ? false
+                                      : true,
                                 ),
                                 new IconButton(
                                   icon: new Icon(Icons.delete),
                                   onPressed: () {
                                     this._showDeleteDialog(book.uid);
                                   },
-
                                 ),
                               ],
-                            ) 
-                          );
-                        },
-                      ),
-                    )
-                  ],
-                );
-              },
-            );
-          },
-        );
-    }else{
+                            ));
+                      },
+                    ),
+                  )
+                ],
+              );
+            },
+          );
+        },
+      );
+    } else {
       return new Text("Aucun utilisateur connecté. Problème réseau?");
     }
   }
 
   @override
-    Widget build(BuildContext context) {
-      return new Scaffold(
-        appBar: new AppBar(
-          title: new Text("Bibliochouette"),
-        ),
-        body: _manageDisplay(),
-        drawer: new BibDrawer(user: this._user),
-        floatingActionButton: new FloatingActionButton(
+  Widget build(BuildContext context) {
+    return new Scaffold(
+      appBar: new AppBar(
+        title: new Text("Bibliochouette"),
+      ),
+      body: _manageDisplay(),
+      drawer: new BibDrawer(user: this._user),
+      floatingActionButton: new FloatingActionButton(
           elevation: 0.0,
           child: new Icon(Icons.add),
           backgroundColor: new Color(0xFFE57373),
-          onPressed: (){_addBook();}
-        ),
-      );
-    }
+          onPressed: () {
+            _addBook();
+          }),
+    );
+  }
 }

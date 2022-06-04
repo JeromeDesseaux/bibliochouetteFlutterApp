@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:crypto/crypto.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -32,7 +34,7 @@ class AmazonRequester {
         .join('T');
   }
 
-  String generateQueryString(String isbn) {
+  Uri generateQueryString(String isbn) {
     String domain = "webservices.amazon.fr";
     var params = new Map<String, String>.from({
       'AWSAccessKeyId': this.awsID,
@@ -45,10 +47,9 @@ class AmazonRequester {
       "Timestamp": getFormattedDatetime()
     });
 
-    List<String> pairs = new List<String>();
+    List<String> pairs = [];
 
-    params
-        .forEach((k, v) => {pairs.add("${k}=" + Uri.encodeComponent(v))});
+    params.forEach((k, v) => {pairs.add("${k}=" + Uri.encodeComponent(v))});
 
     pairs = pairs..sort((a, b) => a.compareTo(b));
 
@@ -64,13 +65,11 @@ class AmazonRequester {
         '&Signature=' +
         signature;
 
-    print(queryString);
-
-    return queryString;
+    return new Uri(query: queryString);
   }
 
   Future<book.Book> getBookFromIsbn(String isbn) async {
-    String query = this.generateQueryString(isbn);
+    Uri query = this.generateQueryString(isbn);
 
     http.Response response;
     try {
@@ -79,7 +78,7 @@ class AmazonRequester {
       throw Exception("Impossible d'exécuter la requête");
     }
 
-    if(response.statusCode != 200){
+    if (response.statusCode != 200) {
       throw Exception("Paramètres invalides. Vérifier les identifiants AWS.");
     }
 
@@ -87,15 +86,15 @@ class AmazonRequester {
     resBook.isbn = isbn;
 
     String body = response.body;
-    print(body);
-    var document = xml.parse(body);
+    var document = xml.XmlDocument.parse(body);
     try {
       String title = document.findAllElements("Title").first.text;
       resBook.title = title;
     } catch (e) {}
     try {
       String pubDate = document.findAllElements("PublicationDate").first.text;
-      RegExp regexPubDate = new RegExp(r".+?(?=-)", caseSensitive: false, multiLine: true);
+      RegExp regexPubDate =
+          new RegExp(r".+?(?=-)", caseSensitive: false, multiLine: true);
       resBook.publicationYear = regexPubDate.firstMatch(pubDate)[0];
     } catch (e) {}
     try {
