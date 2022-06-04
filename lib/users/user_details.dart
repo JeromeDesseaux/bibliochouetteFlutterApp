@@ -1,4 +1,4 @@
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_auth/firebase_auth.dart' as firebaseAuth;
 import "package:flutter/material.dart";
 import './user_edit.dart';
 import 'package:intl/intl.dart';
@@ -7,9 +7,9 @@ import "../models/user.dart";
 import "../MyBullet.dart";
 
 class UserDetailsPage extends StatelessWidget {
-  final List<Loan> loans = new List<Loan>();
+  final List<Loan> loans = [];
   final User user;
-  final User fuser;
+  final firebaseAuth.User fuser;
 
   UserDetailsPage({@required this.user, @required this.fuser, loans}) {
     try {
@@ -26,9 +26,6 @@ class UserDetailsPage extends StatelessWidget {
   }
 
   void _edit(context) {
-    print("edit");
-    print(this.fuser.uid);
-    print(this.user.uid);
     Navigator.push(
       context,
       MaterialPageRoute(

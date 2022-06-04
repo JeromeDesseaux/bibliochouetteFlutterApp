@@ -45,7 +45,7 @@ class MyApp extends StatelessWidget {
   Widget _handleCurrentScreen() {
     try {
       return new StreamBuilder<User>(
-          stream: FirebaseAuth.instance.onAuthStateChanged,
+          stream: FirebaseAuth.instance.authStateChanges(),
           builder: (BuildContext context, snapshot) {
             /*if (snapshot.connectionState == ConnectionState.waiting) {
             return new Text("Loading");

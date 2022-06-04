@@ -19,10 +19,8 @@ class _LoanListPageState extends State<LoanListPage> {
   @override
   void initState() {
     super.initState();
-    FirebaseAuth.instance.currentUser().then((user) {
-      setState(() {
-        _user = user;
-      });
+    setState(() {
+      _user = FirebaseAuth.instance.currentUser;
     });
   }
 

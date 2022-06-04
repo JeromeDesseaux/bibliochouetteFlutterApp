@@ -1,6 +1,5 @@
-import 'package:barcode_scan/barcode_scan.dart';
 import 'package:barcode_scan2/barcode_scan2.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_auth/firebase_auth.dart' as firebaseAuth;
 import "package:flutter/material.dart";
 import 'package:firebase_database/firebase_database.dart';
 import '../models/loan.dart';
@@ -9,7 +8,7 @@ import './loan_user.dart';
 import 'package:flutter/services.dart';
 
 class LoanBookPage extends StatefulWidget {
-  final User user;
+  final firebaseAuth.User user;
 
   LoanBookPage({Key key, @required this.user}) : super(key: key);
 
@@ -22,17 +21,16 @@ class LoanBookPage extends StatefulWidget {
 class _LoanBookPageState extends State<LoanBookPage> {
 //class LoanBookPage extends StatelessWidget {
 
-  User user;
+  firebaseAuth.User user;
   String barcode = "";
 
   // In the constructor, require a Todo
-  _LoanBookPageState(User fuser) {
+  _LoanBookPageState(firebaseAuth.User fuser) {
     this.user = fuser;
   }
 
   Future _scan() async {
     try {
-      BarcodeScanner scanner = new BarcodeScanner();
       ScanResult barcode = await BarcodeScanner.scan();
       //this._searchBookByISBN(barcode);
       setState(() => this.barcode = barcode.rawContent);

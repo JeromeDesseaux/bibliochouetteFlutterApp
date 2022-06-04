@@ -1,10 +1,10 @@
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_auth/firebase_auth.dart' as firebaseAuth;
 import "package:flutter/material.dart";
 import "../models/user.dart";
 import 'package:firebase_database/firebase_database.dart';
 
 class UserEditPage extends StatefulWidget {
-  final User fuser;
+  final firebaseAuth.User fuser;
   final User user;
 
   UserEditPage({Key key, @required this.fuser, @required this.user})
@@ -17,7 +17,7 @@ class UserEditPage extends StatefulWidget {
 }
 
 class _UserEditPageState extends State<UserEditPage> {
-  User fuser;
+  firebaseAuth.User fuser;
   User user;
 
   final GlobalKey<FormState> _editFormKey = GlobalKey<FormState>();

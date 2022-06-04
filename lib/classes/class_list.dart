@@ -8,6 +8,7 @@ import '../models/class.dart';
 // import "./user_create.dart";
 // import "./user_details.dart";
 import "../loading.dart";
+import '../users/user_details.dart';
 
 class ClassListPage extends StatefulWidget {
   @override
@@ -104,8 +105,9 @@ class _ClassListPageState extends State<ClassListPage> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                            // builder: (context) => new UserDetailsPage(user: user, fuser: _user, loans: userLoans),
-                            ),
+                          builder: (context) => new UserDetailsPage(
+                              user: null, fuser: _user, loans: []),
+                        ),
                       );
                     },
                     trailing: new Row(

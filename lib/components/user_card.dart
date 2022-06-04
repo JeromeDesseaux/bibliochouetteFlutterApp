@@ -1,4 +1,4 @@
-import 'package:firebase_auth/firebase_auth.dart';
+// import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:gestion_bibliotheque/MyBullet.dart';
 import 'package:gestion_bibliotheque/models/loan.dart';
@@ -11,7 +11,6 @@ class UserCard extends StatelessWidget {
   const UserCard({this.user, this.loans, this.onDelete});
 
   final User user;
-  // final User User;
   final List<Loan> loans;
   final DeleteCallback onDelete;
 

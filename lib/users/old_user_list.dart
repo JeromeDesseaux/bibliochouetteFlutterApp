@@ -1,5 +1,5 @@
 import "package:flutter/material.dart";
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_auth/firebase_auth.dart' as firebaseAuth;
 import 'package:firebase_database/firebase_database.dart';
 import 'package:gestion_bibliotheque/models/class.dart';
 import 'package:gestion_bibliotheque/utils/classes.dart';
@@ -18,22 +18,19 @@ class UserListPage extends StatefulWidget {
 }
 
 class _UserListPageState extends State<UserListPage> {
-  User _user;
-  List<Class> classes = new List<Class>();
+  firebaseAuth.User _user;
+  List<Class> classes = [];
 
   @override
   void initState() {
     super.initState();
-    FirebaseAuth.instance.currentUser().then((user) {
-      setState(() {
-        _user = user;
-      });
-      this._getClasses(user);
+    setState(() {
+      _user = firebaseAuth.FirebaseAuth.instance.currentUser;
     });
   }
 
   void _getClasses(user) async {
-    List<Class> classes = new List<Class>();
+    List<Class> classes = [];
     await getClasses(user.uid).then((c) => classes = c);
     setState(() {
       this.classes = classes;

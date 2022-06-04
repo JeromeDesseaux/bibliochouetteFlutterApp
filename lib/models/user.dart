@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:firebase_database/firebase_database.dart';
 import 'package:gestion_bibliotheque/models/class.dart';
 import 'package:gestion_bibliotheque/models/loan.dart';
@@ -33,8 +31,8 @@ class User {
         .child(userUUID)
         .child(this.classUUID)
         .once()
-        .then((snapshot) {
-      Map<dynamic, dynamic> map = snapshot.value;
+        .then((result) {
+      Map<dynamic, dynamic> map = result.snapshot.value;
       if (map != null) {
         map.forEach((key, json) {
           Class c = Class.fromJson(new Map<String, dynamic>.from(json), key);

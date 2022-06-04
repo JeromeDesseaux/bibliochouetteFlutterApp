@@ -1,17 +1,14 @@
-import "package:flutter/material.dart";
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_auth/firebase_auth.dart' as firebaseAuth;
 import 'package:firebase_database/firebase_database.dart';
+import "package:flutter/material.dart";
 import 'package:gestion_bibliotheque/components/empty_data.dart';
 import 'package:gestion_bibliotheque/components/user_card.dart';
 import 'package:gestion_bibliotheque/models/class.dart';
 import 'package:gestion_bibliotheque/utils/classes.dart';
-import '../models/user.dart';
+
 import "./user_create.dart";
-import "./user_details.dart";
 import "../models/loan.dart";
-import "../MyBullet.dart";
-import "../loading.dart";
-import 'package:grouped_list/grouped_list.dart';
+import '../models/user.dart';
 
 class UserListPage extends StatefulWidget {
   @override
@@ -21,26 +18,24 @@ class UserListPage extends StatefulWidget {
 }
 
 class _UserListPageState extends State<UserListPage> {
-  User _user;
-  List<Class> classes = new List<Class>();
-  List<User> users = new List<User>();
-  List<Loan> loans = new List<Loan>();
+  firebaseAuth.User _user;
+  List<Class> classes = [];
+  List<User> users = [];
+  List<Loan> loans = [];
 
   @override
   void initState() {
     super.initState();
-    FirebaseAuth.instance.currentUser().then((user) {
-      setState(() {
-        _user = user;
-      });
-      this._getClasses(user);
-      this._getUsers(user);
-      this._getLoans(user);
+    setState(() {
+      _user = firebaseAuth.FirebaseAuth.instance.currentUser;
     });
+    this._getClasses(_user);
+    this._getUsers(_user);
+    this._getLoans(_user);
   }
 
   void _getClasses(user) async {
-    List<Class> classes = new List<Class>();
+    List<Class> classes = [];
     await getClasses(user.uid).then((c) => classes = c);
     setState(() {
       this.classes = classes;
@@ -48,7 +43,7 @@ class _UserListPageState extends State<UserListPage> {
   }
 
   void _getUsers(user) async {
-    List<User> users = new List<User>();
+    List<User> users = [];
     await getUsers(user.uid).then((c) => users = c);
     setState(() {
       this.users = users;
@@ -64,14 +59,12 @@ class _UserListPageState extends State<UserListPage> {
   }
 
   void refreshData() {
-    FirebaseAuth.instance.currentUser().then((user) {
-      setState(() {
-        _user = user;
-      });
-      this._getClasses(user);
-      this._getUsers(user);
-      this._getLoans(user);
+    setState(() {
+      _user = firebaseAuth.FirebaseAuth.instance.currentUser;
     });
+    this._getClasses(_user);
+    this._getUsers(_user);
+    this._getLoans(_user);
   }
 
   void _addUser() {
