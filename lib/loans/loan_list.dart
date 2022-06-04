@@ -74,7 +74,7 @@ class _LoanListPageState extends State<LoanListPage> {
 
   Widget _manageDisplay() {
     if (_user != null) {
-      return new StreamBuilder<Event>(
+      return new StreamBuilder<DatabaseEvent>(
         stream: FirebaseDatabase.instance
             .ref()
             .child("loans")
@@ -82,7 +82,7 @@ class _LoanListPageState extends State<LoanListPage> {
             .orderByChild("returnDateValidated")
             .equalTo(null)
             .onValue,
-        builder: (BuildContext context, AsyncSnapshot<Event> snapshot) {
+        builder: (BuildContext context, AsyncSnapshot<DatabaseEvent> snapshot) {
           // return StreamBuilder(
           //   stream: FirebaseDatabase.instance.ref().child("loans").child(_user.uid).onValue,
 

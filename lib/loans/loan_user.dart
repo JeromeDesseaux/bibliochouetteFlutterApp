@@ -45,14 +45,14 @@ class LoanUserPage extends StatelessWidget {
 
   Widget _manageDisplay() {
     if (user != null) {
-      return new StreamBuilder<Event>(
+      return new StreamBuilder<DatabaseEvent>(
         stream: FirebaseDatabase.instance
             .ref()
             .child("users")
             .child(user.uid)
             .orderByChild("username")
             .onValue,
-        builder: (BuildContext context, AsyncSnapshot<Event> snapshot) {
+        builder: (BuildContext context, AsyncSnapshot<DatabaseEvent> snapshot) {
           if (!snapshot.hasData) return const Text('No data provided');
           Map<dynamic, dynamic> map = snapshot.data.snapshot.value;
           List<User> users = [];

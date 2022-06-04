@@ -1,3 +1,5 @@
+import 'dart:html';
+
 import "package:flutter/material.dart";
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -83,17 +85,17 @@ class _BookListPageState extends State<BookListPage> {
 
   Widget _manageDisplay() {
     if (_user != null) {
-      return new StreamBuilder<Event>(
+      return new StreamBuilder<DatabaseEvent>(
         stream: FirebaseDatabase.instance
             .ref()
             .child("books")
             .child(_user.uid)
             .onValue,
-        builder: (BuildContext context, AsyncSnapshot<Event> snapshot) {
+        builder: (BuildContext context, AsyncSnapshot<DatabaseEvent> snapshot) {
           if (!snapshot.hasData) return LoadingScreen();
 
           Map<dynamic, dynamic> map = snapshot.data.snapshot.value;
-          List<Book> data = new List<Book>();
+          List<Book> data = [];
           if (map != null) {
             map.forEach((i, v) {
               var book = Book.fromJson(new Map<String, dynamic>.from(v), i);
@@ -108,7 +110,7 @@ class _BookListPageState extends State<BookListPage> {
                   .toList();
           }
           int bookCount = data.length;
-          return new StreamBuilder<Event>(
+          return new StreamBuilder<DatabaseEvent>(
             stream: FirebaseDatabase.instance
                 .ref()
                 .child("loans")
@@ -116,7 +118,8 @@ class _BookListPageState extends State<BookListPage> {
                 .orderByChild("returnDateValidated")
                 .equalTo(null)
                 .onValue,
-            builder: (BuildContext context, AsyncSnapshot<Event> snapshot) {
+            builder:
+                (BuildContext context, AsyncSnapshot<DatabaseEvent> snapshot) {
               if (!snapshot.hasData) return LoadingScreen();
               Map<dynamic, dynamic> map = snapshot.data.snapshot.value;
               List<String> loansISBN = [];

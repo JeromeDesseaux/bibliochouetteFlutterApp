@@ -71,13 +71,13 @@ class _ClassListPageState extends State<ClassListPage> {
 
   Widget _manageDisplay() {
     if (_user != null) {
-      return new StreamBuilder<Event>(
+      return new StreamBuilder<DatabaseEvent>(
         stream: FirebaseDatabase.instance
             .ref()
             .child("classes")
             .child(_user.uid)
             .onValue,
-        builder: (BuildContext context, AsyncSnapshot<Event> snapshot) {
+        builder: (BuildContext context, AsyncSnapshot<DatabaseEvent> snapshot) {
           if (!snapshot.hasData) return LoadingScreen();
 
           Map<dynamic, dynamic> map = snapshot.data.snapshot.value;
@@ -131,9 +131,9 @@ class _ClassListPageState extends State<ClassListPage> {
               subtitle: "Cliquez sur le bouton ci-dessous pour en ajouter un.",
             );
           }
-          // return StreamBuilder<Event>(
+          // return StreamBuilder<DatabaseEvent>(
           //   stream: FirebaseDatabase.instance.ref().child("loans").child(_user.uid).onValue,
-          //   builder: (BuildContext context, AsyncSnapshot<Event> snapshot) {
+          //   builder: (BuildContext context, AsyncSnapshot<DatabaseEvent> snapshot) {
           //     if (!snapshot.hasData) return LoadingScreen();
           //     Map<dynamic, dynamic> map = snapshot.data.snapshot.value;
           //     List<Loan> loans = [];

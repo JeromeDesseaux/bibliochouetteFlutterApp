@@ -85,14 +85,14 @@ class _LoanBookPageState extends State<LoanBookPage> {
 
   Widget _manageDisplay() {
     if (user != null) {
-      return new StreamBuilder<Event>(
+      return new StreamBuilder<DatabaseEvent>(
         stream: FirebaseDatabase.instance
             .ref()
             .child("books")
             .child(user.uid)
             .orderByChild("title")
             .onValue,
-        builder: (BuildContext context, AsyncSnapshot<Event> snapshot) {
+        builder: (BuildContext context, AsyncSnapshot<DatabaseEvent> snapshot) {
           if (!snapshot.hasData) return const Text('No data provided');
           Map<dynamic, dynamic> map = snapshot.data.snapshot.value;
           List<Book> books = [];
@@ -104,7 +104,7 @@ class _LoanBookPageState extends State<LoanBookPage> {
             books.sort((a, b) => a.title.compareTo(b.title));
           });
           // int bookCount = books.length;
-          return new StreamBuilder<Event>(
+          return new StreamBuilder<DatabaseEvent>(
             stream: FirebaseDatabase.instance
                 .ref()
                 .child("loans")
@@ -112,7 +112,8 @@ class _LoanBookPageState extends State<LoanBookPage> {
                 .orderByChild("returnDateValidated")
                 .equalTo(null)
                 .onValue,
-            builder: (BuildContext context, AsyncSnapshot<Event> snapshot) {
+            builder:
+                (BuildContext context, AsyncSnapshot<DatabaseEvent> snapshot) {
               if (!snapshot.hasData) return const Text('No data provided');
               Map<dynamic, dynamic> map = snapshot.data.snapshot.value;
               List<Loan> loans = [];

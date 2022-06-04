@@ -84,13 +84,13 @@ class _UserListPageState extends State<UserListPage> {
 
   Widget _manageDisplay() {
     if (_user != null) {
-      return new StreamBuilder<Event>(
+      return new StreamBuilder<DatabaseEvent>(
         stream: FirebaseDatabase.instance
             .ref()
             .child("users")
             .child(_user.uid)
             .onValue,
-        builder: (BuildContext context, AsyncSnapshot<Event> snapshot) {
+        builder: (BuildContext context, AsyncSnapshot<DatabaseEvent> snapshot) {
           if (!snapshot.hasData) return LoadingScreen();
 
           Map<dynamic, dynamic> map = snapshot.data.snapshot.value;
@@ -103,13 +103,14 @@ class _UserListPageState extends State<UserListPage> {
             });
           }
           int bookCount = data.length;
-          return StreamBuilder<Event>(
+          return StreamBuilder<DatabaseEvent>(
             stream: FirebaseDatabase.instance
                 .ref()
                 .child("loans")
                 .child(_user.uid)
                 .onValue,
-            builder: (BuildContext context, AsyncSnapshot<Event> snapshot) {
+            builder:
+                (BuildContext context, AsyncSnapshot<DatabaseEvent> snapshot) {
               if (!snapshot.hasData) return LoadingScreen();
               Map<dynamic, dynamic> map = snapshot.data.snapshot.value;
               List<Loan> loans = [];
